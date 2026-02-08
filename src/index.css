@@ -1,0 +1,100 @@
+@import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  font-family: 'Zen Maru Gothic', system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+@keyframes pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+@keyframes flip {
+  0% { transform: rotateX(0deg); }
+  45% { transform: rotateX(90deg); }
+  55% { transform: rotateX(90deg); }
+  100% { transform: rotateX(0deg); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-16px); }
+  60% { transform: translateY(-8px); }
+}
+
+@keyframes modalIn {
+  0% { opacity: 0; transform: scale(0.9) translateY(16px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes toastIn {
+  0% { opacity: 0; transform: translateY(-8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.tile-pop {
+  animation: pop 100ms ease-in-out;
+}
+
+.row-shake {
+  animation: shake 500ms ease-in-out;
+}
+
+.tile-flip {
+  animation: flip 500ms ease-in-out forwards;
+  animation-delay: var(--flip-delay, 0ms);
+}
+
+.tile-bounce {
+  animation: bounce 600ms ease-in-out;
+}
+
+.modal-enter {
+  animation: modalIn 300ms ease-out;
+}
+
+.toast-enter {
+  animation: toastIn 200ms ease-out forwards;
+}
+
+.tile-flip[data-status="correct"] {
+  animation: flip 500ms ease-in-out forwards;
+}
+
+.tile-flip[data-status="present"] {
+  animation: flip 500ms ease-in-out forwards;
+}
+
+.tile-flip[data-status="absent"] {
+  animation: flip 500ms ease-in-out forwards;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
