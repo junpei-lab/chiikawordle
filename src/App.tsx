@@ -179,6 +179,7 @@ function App() {
           answer={answer}
           guessCount={guesses.length}
           onPlayAgain={handlePlayAgain}
+          onClose={() => setShowGameOver(false)}
           gameMode={gameMode}
           isDaily={isDaily}
         />

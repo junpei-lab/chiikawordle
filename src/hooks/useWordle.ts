@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { TileData, KeyStatus, GameStatus, GameMode } from '../types';
 import { ANSWER_WORDS, HARD_ANSWER_WORDS, isValidHiragana } from '../data/words';
 
@@ -106,6 +106,8 @@ function buildInitialState(mode: GameMode) {
   };
 }
 
+type InitialState = ReturnType<typeof buildInitialState>;
+
 export function useWordle(mode: GameMode) {
   const [initial] = useState(() => buildInitialState(mode));
   const [answer, setAnswer] = useState<string[]>(initial.answer);
@@ -119,14 +121,13 @@ export function useWordle(mode: GameMode) {
   const [hintRevealed, setHintRevealed] = useState(initial.hintRevealed);
   const [toastMessage, setToastMessage] = useState('');
   const [isDaily, setIsDaily] = useState(true);
-  const [prevMode, setPrevMode] = useState(mode);
+  const prevModeRef = useRef(mode);
+  const lastDateRef = useRef(getTodayString());
 
   const wordLength = answer.length;
   const displayColumns = mode === 'hard' && !hintRevealed ? HARD_MAX_COLUMNS : wordLength;
 
-  if (mode !== prevMode) {
-    setPrevMode(mode);
-    const s = buildInitialState(mode);
+  const applyInitialState = useCallback((s: InitialState) => {
     setAnswer(s.answer);
     setGuesses(s.guesses);
     setCurrentGuess([]);
@@ -138,7 +139,36 @@ export function useWordle(mode: GameMode) {
     setRevealRow(-1);
     setBounceRow(-1);
     setToastMessage('');
-  }
+  }, []);
+
+  useEffect(() => {
+    if (prevModeRef.current === mode) return;
+    prevModeRef.current = mode;
+    applyInitialState(buildInitialState(mode));
+    lastDateRef.current = getTodayString();
+  }, [mode, applyInitialState]);
+
+  useEffect(() => {
+    if (!isDaily) return;
+    const interval = window.setInterval(() => {
+      const today = getTodayString();
+      if (today === lastDateRef.current) return;
+      lastDateRef.current = today;
+      applyInitialState(buildInitialState(mode));
+      setToastMessage('今日の問題に切り替わりました');
+    }, 30000);
+    return () => window.clearInterval(interval);
+  }, [isDaily, mode, applyInitialState]);
+
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timer = window.setTimeout(() => setToastMessage(''), 2000);
+    return () => window.clearTimeout(timer);
+  }, [toastMessage]);
+
+  useEffect(() => {
+    lastDateRef.current = getTodayString();
+  }, [mode, isDaily]);
 
   useEffect(() => {
     if (!isDaily) return;
@@ -153,7 +183,6 @@ export function useWordle(mode: GameMode) {
 
   const showToast = useCallback((message: string) => {
     setToastMessage(message);
-    setTimeout(() => setToastMessage(''), 2000);
   }, []);
 
   const addChar = useCallback((char: string) => {
@@ -255,6 +284,7 @@ export function useWordle(mode: GameMode) {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (document.querySelector('[role="dialog"][aria-modal="true"]')) return;
       if (e.isComposing || e.keyCode === 229) return;
       if (e.key === 'Enter') {
         e.preventDefault();

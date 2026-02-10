@@ -28,7 +28,9 @@ function CharKey({
 }) {
   return (
     <button
+      type="button"
       onClick={onPress}
+      aria-label={`${char}を入力`}
       className={`
         flex-1 h-[38px] sm:h-[42px] rounded-md
         text-[13px] sm:text-base font-bold
@@ -54,9 +56,13 @@ function ActionButton({
   type: 'delete' | 'enter';
   onClick: () => void;
 }) {
+  const label = type === 'delete' ? '1文字削除' : '入力を確定';
+
   return (
     <button
+      type="button"
       onClick={onClick}
+      aria-label={label}
       className={`
         flex-[1.5] h-[38px] sm:h-[42px] rounded-md
         text-[11px] sm:text-xs font-bold
@@ -135,10 +141,13 @@ export function Keyboard({ keyStatuses, onChar, onDelete, onEnter }: KeyboardPro
   const [activeTab, setActiveTab] = useState<'seion' | 'dakuon'>('seion');
 
   return (
-    <div className="w-full max-w-[480px] mx-auto px-1">
+    <div className="w-full max-w-[480px] mx-auto px-1" role="group" aria-label="かなキーボード">
       <div className="flex gap-1 mb-2 justify-center">
         <button
+          type="button"
           onClick={() => setActiveTab('seion')}
+          aria-pressed={activeTab === 'seion'}
+          aria-label="清音キーボードを表示"
           className={`
             px-5 py-1.5 rounded-md text-xs font-bold tracking-wider transition-all
             ${activeTab === 'seion'
@@ -149,7 +158,10 @@ export function Keyboard({ keyStatuses, onChar, onDelete, onEnter }: KeyboardPro
           清音
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('dakuon')}
+          aria-pressed={activeTab === 'dakuon'}
+          aria-label="濁音・小文字キーボードを表示"
           className={`
             px-5 py-1.5 rounded-md text-xs font-bold tracking-wider transition-all
             ${activeTab === 'dakuon'

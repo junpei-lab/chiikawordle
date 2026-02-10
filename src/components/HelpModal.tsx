@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { GameMode } from '../types';
 
@@ -6,21 +7,81 @@ interface HelpModalProps {
   gameMode: GameMode;
 }
 
+const FOCUSABLE_SELECTOR = 'button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])';
+
 export function HelpModal({ onClose, gameMode }: HelpModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const previousActiveElement = document.activeElement as HTMLElement | null;
+    const modalElement = modalRef.current;
+    if (!modalElement) return;
+
+    const getFocusableElements = () =>
+      Array.from(modalElement.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR))
+        .filter(element => !element.hasAttribute('disabled'));
+
+    getFocusableElements()[0]?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+
+      if (e.key !== 'Tab') return;
+
+      const focusableElements = getFocusableElements();
+      if (focusableElements.length === 0) return;
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+      const activeElement = document.activeElement as HTMLElement | null;
+
+      if (e.shiftKey && activeElement === firstElement) {
+        e.preventDefault();
+        lastElement.focus();
+      } else if (!e.shiftKey && activeElement === lastElement) {
+        e.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      previousActiveElement?.focus();
+    };
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl p-6 max-w-sm w-full modal-enter border border-gray-200 shadow-xl max-h-[80vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="help-modal-title"
+        aria-describedby="help-modal-description"
+        className="bg-white rounded-2xl p-6 max-w-sm w-full modal-enter border border-gray-200 shadow-xl max-h-[80vh] overflow-y-auto"
+        onClick={e => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-black text-gray-800">あそびかた</h2>
+          <h2 id="help-modal-title" className="text-lg font-black text-gray-800">あそびかた</h2>
           <button
+            type="button"
             onClick={onClose}
+            aria-label="ヘルプを閉じる"
             className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
           >
             <X size={20} />
           </button>
         </div>
 
-        <div className="space-y-4 text-sm text-gray-600">
+        <div id="help-modal-description" className="space-y-4 text-sm text-gray-600">
           {gameMode === 'normal' ? (
             <p>
               5文字のひらがな単語を6回以内に当てよう！
