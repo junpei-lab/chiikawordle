@@ -108,6 +108,10 @@ function buildInitialState(mode: GameMode) {
 
 type InitialState = ReturnType<typeof buildInitialState>;
 
+function getInitialGuess(mode: GameMode, answer: string[]): string[] {
+  return mode === 'easy' && answer.length > 0 ? [answer[0]] : [];
+}
+
 export function useWordle(mode: GameMode) {
   const [initial] = useState(() => buildInitialState(mode));
   const [answer, setAnswer] = useState<string[]>(initial.answer);
@@ -130,7 +134,7 @@ export function useWordle(mode: GameMode) {
   const applyInitialState = useCallback((s: InitialState) => {
     setAnswer(s.answer);
     setGuesses(s.guesses);
-    setCurrentGuess([]);
+    setCurrentGuess(getInitialGuess(mode, s.answer));
     setGameStatus(s.gameStatus);
     setKeyStatuses(s.keyStatuses);
     setHintRevealed(s.hintRevealed);
@@ -139,7 +143,7 @@ export function useWordle(mode: GameMode) {
     setRevealRow(-1);
     setBounceRow(-1);
     setToastMessage('');
-  }, []);
+  }, [mode]);
 
   useEffect(() => {
     if (prevModeRef.current === mode) return;
@@ -187,16 +191,21 @@ export function useWordle(mode: GameMode) {
 
   const addChar = useCallback((char: string) => {
     if (gameStatus !== 'playing') return;
-    if (currentGuess.length >= displayColumns) return;
     if (!isValidHiragana(char)) return;
-    setCurrentGuess(prev => [...prev, char]);
-  }, [gameStatus, currentGuess.length, displayColumns]);
+    setCurrentGuess(prev => {
+      if (prev.length >= displayColumns) return prev;
+      return [...prev, char];
+    });
+  }, [gameStatus, displayColumns]);
 
   const removeChar = useCallback(() => {
     if (gameStatus !== 'playing') return;
-    if (currentGuess.length === 0) return;
-    setCurrentGuess(prev => prev.slice(0, -1));
-  }, [gameStatus, currentGuess.length]);
+    setCurrentGuess(prev => {
+      const minimumLength = mode === 'easy' ? 1 : 0;
+      if (prev.length <= minimumLength) return prev;
+      return prev.slice(0, -1);
+    });
+  }, [gameStatus, mode]);
 
   const submitGuess = useCallback(() => {
     if (gameStatus !== 'playing') return;
@@ -243,7 +252,7 @@ export function useWordle(mode: GameMode) {
     const newGuessIndex = guesses.length;
     setRevealRow(newGuessIndex);
     setGuesses(prev => [...prev, newGuess]);
-    setCurrentGuess([]);
+    setCurrentGuess(getInitialGuess(mode, answer));
     setKeyStatuses(newKeyStatuses);
 
     const isCorrect = statuses.every(s => s === 'correct');
@@ -269,10 +278,11 @@ export function useWordle(mode: GameMode) {
   }, [hintRevealed, gameStatus, wordLength, showToast]);
 
   const resetGame = useCallback(() => {
-    setAnswer(getRandomWord(mode).split(''));
+    const newAnswer = getRandomWord(mode).split('');
+    setAnswer(newAnswer);
     setIsDaily(false);
     setGuesses([]);
-    setCurrentGuess([]);
+    setCurrentGuess(getInitialGuess(mode, newAnswer));
     setGameStatus('playing');
     setKeyStatuses(new Map());
     setShakeRow(false);

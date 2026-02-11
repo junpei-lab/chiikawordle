@@ -4,7 +4,7 @@ export type KeyStatus = 'correct' | 'present' | 'absent' | 'unused';
 
 export type GameStatus = 'playing' | 'won' | 'lost';
 
-export type GameMode = 'normal' | 'hard';
+export type GameMode = 'easy' | 'normal' | 'hard';
 
 export interface TileData {
   char: string;

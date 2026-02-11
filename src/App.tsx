@@ -9,7 +9,9 @@ import { GameOverModal } from './components/GameOverModal';
 import { HelpModal } from './components/HelpModal';
 
 function App() {
+  const isDebugMode = import.meta.env.DEV;
   const [gameMode, setGameMode] = useState<GameMode>('normal');
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   const {
     guesses,
@@ -36,6 +38,7 @@ function App() {
   const [showHelp, setShowHelp] = useState(false);
   const [showGameOver, setShowGameOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const keyboardContainerRef = useRef<HTMLDivElement>(null);
   const isComposingRef = useRef(false);
 
   const focusInput = useCallback(() => {
@@ -82,6 +85,30 @@ function App() {
     setShowGameOver(false);
   }, [gameMode]);
 
+  useEffect(() => {
+    const keyboardElement = keyboardContainerRef.current;
+    if (!keyboardElement) return;
+
+    const updateKeyboardHeight = () => {
+      const nextHeight = Math.ceil(keyboardElement.getBoundingClientRect().height);
+      setKeyboardHeight(prevHeight => (prevHeight === nextHeight ? prevHeight : nextHeight));
+    };
+
+    updateKeyboardHeight();
+
+    let observer: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(updateKeyboardHeight);
+      observer.observe(keyboardElement);
+    }
+
+    window.addEventListener('resize', updateKeyboardHeight);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', updateKeyboardHeight);
+    };
+  }, []);
+
   const handlePlayAgain = () => {
     setShowGameOver(false);
     resetGame();
@@ -107,6 +134,12 @@ function App() {
         </div>
       )}
 
+      {isDebugMode && (
+        <div className="fixed top-20 right-3 z-40 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-700 shadow-sm">
+          DEBUG: 答え {answer}
+        </div>
+      )}
+
       <input
         ref={inputRef}
         type="text"
@@ -120,8 +153,13 @@ function App() {
         onChange={handleInputChange}
       />
 
-      <main className="flex-1 flex flex-col items-center justify-between py-4 px-2 max-w-lg mx-auto w-full">
-        <div className="flex-1 flex flex-col items-center justify-center gap-3">
+      <main
+        className="flex-1 overflow-y-auto py-4 px-2 max-w-lg mx-auto w-full"
+        style={{
+          paddingBottom: `calc(${keyboardHeight}px + env(safe-area-inset-bottom, 0px))`,
+        }}
+      >
+        <div className="min-h-full flex flex-col items-center justify-center gap-3">
           {gameMode === 'hard' && gameStatus === 'playing' && (
             <div className="flex justify-center">
               {!hintRevealed ? (
@@ -161,8 +199,13 @@ function App() {
             gameStatus={gameStatus}
           />
         </div>
+      </main>
 
-        <div className="w-full pb-2">
+      <div
+        className="fixed bottom-0 left-0 right-0 z-40 bg-gray-50 border-t border-gray-200"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      >
+        <div ref={keyboardContainerRef} className="max-w-lg mx-auto w-full px-2 py-2">
           <Keyboard
             keyStatuses={keyStatuses}
             onChar={addChar}
@@ -170,7 +213,7 @@ function App() {
             onEnter={submitGuess}
           />
         </div>
-      </main>
+      </div>
 
       {showHelp && <HelpModal onClose={() => setShowHelp(false)} gameMode={gameMode} />}
       {showGameOver && (gameStatus === 'won' || gameStatus === 'lost') && (

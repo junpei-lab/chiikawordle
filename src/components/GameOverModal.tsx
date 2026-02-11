@@ -90,7 +90,7 @@ export function GameOverModal({
     };
   }, [onClose]);
 
-  const modeLabel = gameMode === 'hard' ? 'むずかしい' : 'ふつう';
+  const modeLabel = gameMode === 'hard' ? 'むずかしい' : gameMode === 'easy' ? 'かんたん' : 'ふつう';
 
   return (
     <div

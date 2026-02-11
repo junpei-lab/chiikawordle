@@ -86,6 +86,16 @@ export function HelpModal({ onClose, gameMode }: HelpModalProps) {
             <p>
               5文字のひらがな単語を6回以内に当てよう！
             </p>
+          ) : gameMode === 'easy' ? (
+            <div className="space-y-2">
+              <p>
+                5文字のひらがな単語を6回以内に当てよう！
+              </p>
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-xs">
+                <p className="font-bold mb-1">かんたんモード</p>
+                <p>最初の1文字が最初から分かっている状態でスタートします。</p>
+              </div>
+            </div>
           ) : (
             <div className="space-y-2">
               <p>

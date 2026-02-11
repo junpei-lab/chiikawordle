@@ -1,5 +1,5 @@
-import { HelpCircle, RotateCcw } from 'lucide-react';
-import { GameMode } from '../types';
+import { HelpCircle, RotateCcw } from "lucide-react";
+import { GameMode } from "../types";
 
 interface HeaderProps {
   onReset: () => void;
@@ -8,7 +8,12 @@ interface HeaderProps {
   onModeChange: (mode: GameMode) => void;
 }
 
-export function Header({ onReset, onHelp, gameMode, onModeChange }: HeaderProps) {
+export function Header({
+  onReset,
+  onHelp,
+  gameMode,
+  onModeChange,
+}: HeaderProps) {
   return (
     <header className="border-b border-gray-200">
       <div className="flex items-center justify-between px-4 py-3">
@@ -24,7 +29,7 @@ export function Header({ onReset, onHelp, gameMode, onModeChange }: HeaderProps)
             ちいかわーどる
           </h1>
           <p className="text-[10px] text-gray-400 tracking-widest">
-            JAPANESE WORDLE
+            なんか5もじいないのことばをあてるやつ
           </p>
         </div>
         <button
@@ -37,21 +42,31 @@ export function Header({ onReset, onHelp, gameMode, onModeChange }: HeaderProps)
       </div>
       <div className="flex gap-1 justify-center pb-2.5">
         <button
-          onClick={() => onModeChange('normal')}
+          onClick={() => onModeChange("easy")}
           className={`px-4 py-1 rounded-full text-xs font-bold tracking-wide transition-all ${
-            gameMode === 'normal'
-              ? 'bg-pink-400 text-white shadow-sm'
-              : 'bg-gray-100 text-gray-400 hover:text-gray-600 hover:bg-gray-200'
+            gameMode === "easy"
+              ? "bg-emerald-500 text-white shadow-sm"
+              : "bg-gray-100 text-gray-400 hover:text-gray-600 hover:bg-gray-200"
+          }`}
+        >
+          かんたん
+        </button>
+        <button
+          onClick={() => onModeChange("normal")}
+          className={`px-4 py-1 rounded-full text-xs font-bold tracking-wide transition-all ${
+            gameMode === "normal"
+              ? "bg-pink-400 text-white shadow-sm"
+              : "bg-gray-100 text-gray-400 hover:text-gray-600 hover:bg-gray-200"
           }`}
         >
           ふつう
         </button>
         <button
-          onClick={() => onModeChange('hard')}
+          onClick={() => onModeChange("hard")}
           className={`px-4 py-1 rounded-full text-xs font-bold tracking-wide transition-all ${
-            gameMode === 'hard'
-              ? 'bg-rose-500 text-white shadow-sm'
-              : 'bg-gray-100 text-gray-400 hover:text-gray-600 hover:bg-gray-200'
+            gameMode === "hard"
+              ? "bg-rose-500 text-white shadow-sm"
+              : "bg-gray-100 text-gray-400 hover:text-gray-600 hover:bg-gray-200"
           }`}
         >
           むずかしい
