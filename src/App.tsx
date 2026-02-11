@@ -1,17 +1,18 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Lightbulb } from 'lucide-react';
-import { GameMode } from './types';
-import { useWordle } from './hooks/useWordle';
-import { Header } from './components/Header';
-import { Board } from './components/Board';
-import { Keyboard } from './components/Keyboard';
-import { GameOverModal } from './components/GameOverModal';
-import { HelpModal } from './components/HelpModal';
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Lightbulb } from "lucide-react";
+import { GameMode } from "./types";
+import { useWordle } from "./hooks/useWordle";
+import { Header } from "./components/Header";
+import { Board } from "./components/Board";
+import { Keyboard } from "./components/Keyboard";
+import { GameOverModal } from "./components/GameOverModal";
+import { HelpModal } from "./components/HelpModal";
 
 function App() {
   const isDebugMode = import.meta.env.DEV;
-  const [gameMode, setGameMode] = useState<GameMode>('normal');
+  const [gameMode, setGameMode] = useState<GameMode>("normal");
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
 
   const {
     guesses,
@@ -55,7 +56,9 @@ function App() {
     isComposingRef.current = true;
   };
 
-  const handleCompositionEnd = (e: React.CompositionEvent<HTMLInputElement>) => {
+  const handleCompositionEnd = (
+    e: React.CompositionEvent<HTMLInputElement>,
+  ) => {
     isComposingRef.current = false;
     const text = e.data;
     if (text) {
@@ -64,18 +67,18 @@ function App() {
       }
     }
     if (inputRef.current) {
-      inputRef.current.value = '';
+      inputRef.current.value = "";
     }
   };
 
   const handleInputChange = () => {
     if (!isComposingRef.current && inputRef.current) {
-      inputRef.current.value = '';
+      inputRef.current.value = "";
     }
   };
 
   useEffect(() => {
-    if (gameStatus === 'won' || gameStatus === 'lost') {
+    if (gameStatus === "won" || gameStatus === "lost") {
       const timer = setTimeout(() => setShowGameOver(true), 1600);
       return () => clearTimeout(timer);
     }
@@ -86,26 +89,45 @@ function App() {
   }, [gameMode]);
 
   useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const updateViewportMode = () => setIsMobileViewport(mediaQuery.matches);
+
+    updateViewportMode();
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", updateViewportMode);
+      return () => mediaQuery.removeEventListener("change", updateViewportMode);
+    }
+
+    mediaQuery.addListener(updateViewportMode);
+    return () => mediaQuery.removeListener(updateViewportMode);
+  }, []);
+
+  useEffect(() => {
     const keyboardElement = keyboardContainerRef.current;
     if (!keyboardElement) return;
 
     const updateKeyboardHeight = () => {
-      const nextHeight = Math.ceil(keyboardElement.getBoundingClientRect().height);
-      setKeyboardHeight(prevHeight => (prevHeight === nextHeight ? prevHeight : nextHeight));
+      const nextHeight = Math.ceil(
+        keyboardElement.getBoundingClientRect().height,
+      );
+      setKeyboardHeight((prevHeight) =>
+        prevHeight === nextHeight ? prevHeight : nextHeight,
+      );
     };
 
     updateKeyboardHeight();
 
     let observer: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== 'undefined') {
+    if (typeof ResizeObserver !== "undefined") {
       observer = new ResizeObserver(updateKeyboardHeight);
       observer.observe(keyboardElement);
     }
 
-    window.addEventListener('resize', updateKeyboardHeight);
+    window.addEventListener("resize", updateKeyboardHeight);
     return () => {
       observer?.disconnect();
-      window.removeEventListener('resize', updateKeyboardHeight);
+      window.removeEventListener("resize", updateKeyboardHeight);
     };
   }, []);
 
@@ -154,13 +176,15 @@ function App() {
       />
 
       <main
-        className="flex-1 overflow-y-auto py-4 px-2 max-w-lg mx-auto w-full"
+        className="flex-1 md:flex-none overflow-y-auto md:overflow-visible py-4 px-2 max-w-lg mx-auto w-full"
         style={{
-          paddingBottom: `calc(${keyboardHeight}px + env(safe-area-inset-bottom, 0px))`,
+          paddingBottom: isMobileViewport
+            ? `calc(${keyboardHeight}px + env(safe-area-inset-bottom, 0px))`
+            : "0px",
         }}
       >
-        <div className="min-h-full flex flex-col items-center justify-center gap-3">
-          {gameMode === 'hard' && gameStatus === 'playing' && (
+        <div className="min-h-full md:min-h-0 flex flex-col items-center justify-center gap-3">
+          {gameMode === "hard" && gameStatus === "playing" && (
             <div className="flex justify-center">
               {!hintRevealed ? (
                 <button
@@ -179,7 +203,7 @@ function App() {
             </div>
           )}
 
-          {gameMode === 'hard' && hintRevealed && gameStatus !== 'playing' && (
+          {gameMode === "hard" && hintRevealed && gameStatus !== "playing" && (
             <div className="flex justify-center">
               <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-600 text-xs font-bold">
                 <Lightbulb size={14} />
@@ -202,10 +226,17 @@ function App() {
       </main>
 
       <div
-        className="fixed bottom-0 left-0 right-0 z-40 bg-gray-50 border-t border-gray-200"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        className="fixed bottom-0 left-0 right-0 z-40 bg-gray-50 border-t border-gray-200 md:static md:z-auto md:border-t-0"
+        style={{
+          paddingBottom: isMobileViewport
+            ? "env(safe-area-inset-bottom, 0px)"
+            : "0px",
+        }}
       >
-        <div ref={keyboardContainerRef} className="max-w-lg mx-auto w-full px-2 py-2">
+        <div
+          ref={keyboardContainerRef}
+          className="max-w-lg mx-auto w-full px-2 py-8"
+        >
           <Keyboard
             keyStatuses={keyStatuses}
             onChar={addChar}
@@ -215,8 +246,10 @@ function App() {
         </div>
       </div>
 
-      {showHelp && <HelpModal onClose={() => setShowHelp(false)} gameMode={gameMode} />}
-      {showGameOver && (gameStatus === 'won' || gameStatus === 'lost') && (
+      {showHelp && (
+        <HelpModal onClose={() => setShowHelp(false)} gameMode={gameMode} />
+      )}
+      {showGameOver && (gameStatus === "won" || gameStatus === "lost") && (
         <GameOverModal
           gameStatus={gameStatus}
           answer={answer}
